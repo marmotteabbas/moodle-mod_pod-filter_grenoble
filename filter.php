@@ -1,5 +1,5 @@
 <?php
-/**
+/***
   * Filter who turn PodLille1 urls into iframe for video integration,
   * like the multimedia filter.
   *
@@ -95,6 +95,31 @@ class filter_pod extends moodle_text_filter {
 		// Regular expression for defined a standard pod's url and avoid those already contained in a iframe
 		$word = addslashes($config['url']);
 		$text = htmlspecialchars_decode($text);
+
+		/*-----------------------------*/
+		/* traitement injection iframe */
+		/*-----------------------------*/
+		//in case of IFRAME
+		if(strpos($text,'<iframe src="https://videos.univ-grenoble-alpes.fr/video/') != false) {
+			/*
+			$rssub1 = substr($text,(strpos($text,'<iframe src="https://videos.univ-grenoble-alpes.fr/video/')+13),strpos($text,'</iframe>'));
+			preg_match('/"([^"]+)"/', $rssub1, $m, PREG_OFFSET_CAPTURE);
+    			$clean_str = substr($rssub1,0,$m[0][1]);
+
+			$begin_sub_1 = strpos($text,'<iframe src="https://videos.univ-grenoble-alpes.fr/video/');
+                	$end_sub_1 = strpos($text,'</iframe>')+9;
+
+			$text = str_replace(substr($text,$begin_sub_1,$end_sub_1), $clean_str, $text);*/
+			return $text;
+		}
+
+		/*-----------------------------*/
+                /*  traitement injection href  */
+                /*-----------------------------*/
+		if(strpos($text,'href="https://videos.univ-grenoble-alpes.fr/video/') != false) {
+			return $text;
+		}
+
 		// Prevent tag a href or video source
 		//$text = preg_replace('/(<a href="|<video.*><source src=")(.*)(">.*<\/a>|">.*<\/video>)/', '$2', $text);
 		$text = preg_replace('/<(a.*href="|video.*src=")((https?)?:?\/\/videos\.univ\-grenoble\-alpes\.fr\/video\/[\w\-]+\/)">([\w\-\s\/\.^<]+)<\/(a|video)>/', '$2', $text);
@@ -104,19 +129,15 @@ class filter_pod extends moodle_text_filter {
 		$parampattern		= '(?:([(\?|\&)a-zA-Z_]*=)([a-zA-Z\d]*))?';
 
 		// They cannot have more of 4 parameters in a pod's video url
-		$pat = '('.$iframetagpattern.$podpattern.$parampattern.$parampattern.$parampattern.$parampattern.')';
+		$pat = '('.$iframetagpattern.$podpattern.$parampattern.$parampattern.$parampattern.$parampattern.')'; //var_dump($text);die;
 		// We run the replace :
 		$text = preg_replace_callback($pat, array(&$this, 'filter_pod::filter_process_pod'), $text, -1, $cpt);
-		
+
 		//DAPI FIX
 /*		$text = "<div style='max-width: min(1000px,80vh*16/9)'>".
 		"<div style='position: relative;width: 100%;height: 0;padding-bottom: 56.25%;'>".
 		str_replace('style="padding: 0; margin: 0; border: 0" allowfullscreen', 'style="padding: 0;margin: 0;border:0;position: absolute;width: 100%;height: 100%;left: 0;top: 0" allow="fullscreen"', $text)
 		."</div></div>";
-
-		//$text = "<div style='max-width: min(1000px,80vh*16/9)'><div style='position: relative;width: 100%;height: 0;padding-bottom: 56.25%;'>".$text."</div></div>";
-		// We return the filtered text
-		return $text;		
 */
 
 		//DAPI FIX 2
