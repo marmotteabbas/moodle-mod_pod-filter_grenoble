@@ -99,25 +99,26 @@ class filter_pod extends moodle_text_filter {
 		/*-----------------------------*/
 		/* traitement injection iframe */
 		/*-----------------------------*/
-		//in case of IFRAME
-		if(strpos($text,'<iframe src="https://videos.univ-grenoble-alpes.fr/video/') != false) {
-			/*
-			$rssub1 = substr($text,(strpos($text,'<iframe src="https://videos.univ-grenoble-alpes.fr/video/')+13),strpos($text,'</iframe>'));
-			preg_match('/"([^"]+)"/', $rssub1, $m, PREG_OFFSET_CAPTURE);
-    			$clean_str = substr($rssub1,0,$m[0][1]);
+		//in case of IFRAME at the first position
+		$text_injection_first = "";
+		
+		if($pos_frame_first = strpos($text,'<iframe src="https://videos.univ-grenoble-alpes.fr/') != false) {
+			$pos_frame_first_deux = strpos($text,'</iframe>')+9;
+			
+			$text_injection_first = substr($text,0,$pos_frame_first_deux);
 
-			$begin_sub_1 = strpos($text,'<iframe src="https://videos.univ-grenoble-alpes.fr/video/');
-                	$end_sub_1 = strpos($text,'</iframe>')+9;
-
-			$text = str_replace(substr($text,$begin_sub_1,$end_sub_1), $clean_str, $text);*/
-			return $text;
+			$text = substr($text, $pos_frame_first_deux, strlen($text) -1 - $pos_frame_first_deux);
 		}
 
 		/*-----------------------------*/
-                /*  traitement injection href  */
-                /*-----------------------------*/
-		if(strpos($text,'href="https://videos.univ-grenoble-alpes.fr/video/') != false) {
-			return $text;
+        /*  traitement injection href  */
+        /*-----------------------------*/
+		if(strpos($text,'href="https://videos.univ-grenoble-alpes.fr/') != false) {
+			$pos_frame_first_deux = strpos($text,'</a>')+4;
+			
+			$text_injection_first = substr($text,0,$pos_frame_first_deux);
+
+			$text = substr($text, $pos_frame_first_deux, strlen($text) -1 - $pos_frame_first_deux);
 		}
 
 		// Prevent tag a href or video source
@@ -133,27 +134,55 @@ class filter_pod extends moodle_text_filter {
 		// We run the replace :
 		$text = preg_replace_callback($pat, array(&$this, 'filter_pod::filter_process_pod'), $text, -1, $cpt);
 
-		//DAPI FIX
-/*		$text = "<div style='max-width: min(1000px,80vh*16/9)'>".
-		"<div style='position: relative;width: 100%;height: 0;padding-bottom: 56.25%;'>".
-		str_replace('style="padding: 0; margin: 0; border: 0" allowfullscreen', 'style="padding: 0;margin: 0;border:0;position: absolute;width: 100%;height: 100%;left: 0;top: 0" allow="fullscreen"', $text)
-		."</div></div>";
-*/
+		$haystack = $text;
+		$needle = '<iframe src="//videos.univ-grenoble-alpes.fr/';
+		$needle2 = '</iframe>';
 
-		//DAPI FIX 2
-		$begin_sub = strpos($text,'<iframe src="//videos.univ-grenoble-alpes.fr/video/');
-		$end_sub = strpos($text,'</iframe>')+9;
+		$pos1 = strpos($haystack, $needle);
+		$pos1b = strpos($haystack, $needle2);
 
-		$subiframe = substr($text, intval($begin_sub), (intval($end_sub)-intval($begin_sub)));
-		$begintextbeforeiframe = substr($text, 0, intval($begin_sub));		
-		$endtextafteriframe = substr($text, intval($end_sub), ((strlen($text)-1)- intval($end_sub)));
+		if ($pos1 !== false) {
+			$subpositions = array();
 
-		$subiframe = "<div style='max-width: min(1000px,80vh*16/9)'>".
-		"<div style='position: relative;width: 100%;height: 0;padding-bottom: 56.25%;'>".
-		str_replace('style="padding: 0; margin: 0; border: 0" allowfullscreen', 'style="padding: 0;margin: 0;border:0;position: absolute;width: 100%;height: 100%;left: 0;top: 0" allow="fullscreen"', $subiframe)
-		."</div></div>";
+			array_push($subpositions, array ("begin_sub" => $pos1, "end_sub" => $pos1b));
 
-		return $begintextbeforeiframe.$subiframe.$endtextafteriframe;
+			$currentpos = $pos1;
+			$currentpos2 = $pos1b;
+
+			while ($currentpos !== false ) {
+				$posx = strpos($haystack, $needle, $currentpos + strlen($needle));
+				$posxb = strpos($haystack, $needle2, $currentpos2 + strlen($needle2));
+
+				if ($posx !== false) {
+					array_push($subpositions, array ("begin_sub" => $posx, "end_sub" => $posxb));
+				}
+
+				$currentpos = $posx;
+				$currentpos2 = $posxb;
+			}
+
+		}
+
+		$begin_text_position = 0;
+		$total_return = "";
+
+		foreach ($subpositions as $sp) {
+			$subiframe = substr($text, $sp["begin_sub"], ($sp["end_sub"]-$sp["begin_sub"])+9);
+			$begintextbeforeiframe = substr($text, $begin_text_position, intval($sp["begin_sub"] - $begin_text_position));		
+
+			$subiframe = "<div style='max-width: min(1000px,80vh*16/9)'>".
+			"<div style='position: relative;width: 100%;height: 0;padding-bottom: 56.25%;'>".
+			str_replace('style="padding: 0; margin: 0; border: 0" allowfullscreen', 'style="padding: 0;margin: 0;border:0;position: absolute;width: 100%;height: 100%;left: 0;top: 0" allow="fullscreen"', $subiframe)
+			."</div></div>";
+
+			$total_return .=  $begintextbeforeiframe.$subiframe;
+			$begin_text_position = $sp["end_sub"]+9;
+
+		}
+
+		$endtextafteriframe = substr($text, intval($sp ["end_sub"]), ((strlen($text)-1)- intval($sp ["end_sub"])));
+		return $text_injection_first.$total_return.$endtextafteriframe;
+
 	}
 
 	/**
