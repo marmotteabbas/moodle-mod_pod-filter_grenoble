@@ -99,6 +99,22 @@ class filter_pod extends moodle_text_filter {
 		/*-----------------------------*/
 		/* traitement injection iframe */
 		/*-----------------------------*/
+		$list_iframe = [];
+		$indice = 0;
+
+		while (strpos($text,'<iframe src="https://videos.univ-grenoble-alpes.fr/') !== false) {
+			$debutiframe = strpos($text,'<iframe src="https://videos.univ-grenoble-alpes.fr/');
+			$finiframe = strpos($text,'</iframe>')+9;
+
+			$thisiframe = substr($text, $debutiframe, $finiframe - $debutiframe);
+			$text = str_replace($thisiframe, "markeuriframe".$indice."&&", $text);
+			
+			$list_iframe["markeuriframe".$indice."&&"] = $thisiframe;
+			$indice++;
+
+
+		}
+/*
 		//in case of IFRAME at the first position
 		$text_injection_first = "";
 		
@@ -109,10 +125,25 @@ class filter_pod extends moodle_text_filter {
 
 			$text = substr($text, $pos_frame_first_deux, strlen($text) -1 - $pos_frame_first_deux);
 		}
-
+*/
 		/*-----------------------------*/
         /*  traitement injection href  */
         /*-----------------------------*/
+		$list_href = [];
+		$indice = 0;
+		
+		while (strpos($text,'<a href="https://videos.univ-grenoble-alpes.fr/') !== false) {
+			$debuthref = strpos($text,'<a href="https://videos.univ-grenoble-alpes.fr/');
+			$finherf = strpos($text,'</a>')+4;
+			
+			$thishref = substr($text, $debuthref, $finherf - $debuthref);
+			$text = str_replace($thishref, "markeurhref".$indice."&&", $text);
+			
+			$list_href["markeurhref".$indice."&&"] = $thishref;
+			$indice++;
+
+		}
+/*
 		if(strpos($text,'href="https://videos.univ-grenoble-alpes.fr/') != false) {
 			$pos_frame_first_deux = strpos($text,'</a>')+4;
 			
@@ -120,7 +151,7 @@ class filter_pod extends moodle_text_filter {
 
 			$text = substr($text, $pos_frame_first_deux, strlen($text) -1 - $pos_frame_first_deux);
 		}
-
+*/
 		// Prevent tag a href or video source
 		//$text = preg_replace('/(<a href="|<video.*><source src=")(.*)(">.*<\/a>|">.*<\/video>)/', '$2', $text);
 		$text = preg_replace('/<(a.*href="|video.*src=")((https?)?:?\/\/videos\.univ\-grenoble\-alpes\.fr\/video\/[\w\-]+\/)">([\w\-\s\/\.^<]+)<\/(a|video)>/', '$2', $text);
@@ -181,8 +212,36 @@ class filter_pod extends moodle_text_filter {
 		}
 
 		$endtextafteriframe = substr($text, intval($sp ["end_sub"]), ((strlen($text)-1)- intval($sp ["end_sub"])));
-		return $text_injection_first.$total_return.$endtextafteriframe;
 
+		//replace href at right place
+		foreach ($list_href as $klh => $lh) {
+			$text_injection_first = str_replace($klh,$lh,$text_injection_first);
+
+		}
+		foreach ($list_href as $klh => $lh) {
+			$total_return = str_replace($klh,$lh,$total_return);
+
+		}
+		foreach ($list_href as $klh => $lh) {
+			$endtextafteriframe = str_replace($klh,$lh,$endtextafteriframe);
+
+		}
+
+		//replace iframe at right place
+		foreach ($list_iframe as $kli => $li) {
+			$text_injection_first = str_replace($kli,$li,$text_injection_first);
+
+		}
+		foreach ($list_iframe as $kli => $li) {
+			$total_return = str_replace($kli,$li,$total_return);
+
+		}
+		foreach ($list_iframe as $kli => $li) {
+			$endtextafteriframe = str_replace($kli,$li,$endtextafteriframe);
+
+		}
+
+		return $text_injection_first.$total_return.$endtextafteriframe;
 	}
 
 	/**
