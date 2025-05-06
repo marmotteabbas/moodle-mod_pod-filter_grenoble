@@ -95,7 +95,10 @@ class filter_pod extends moodle_text_filter {
 		// Regular expression for defined a standard pod's url and avoid those already contained in a iframe
 		$word = addslashes($config['url']);
 		$text = htmlspecialchars_decode($text);
-
+		
+		//big clean before process
+		$text = str_replace('<a href="http://videos.univ-grenoble-alpes.fr/','<a href="https://videos.univ-grenoble-alpes.fr/',$text);
+		$text = str_replace('<iframe src="http://videos.univ-grenoble-alpes.fr/','<iframe src="https://videos.univ-grenoble-alpes.fr/',$text);
 		/*-----------------------------*/
 		/* traitement injection iframe */
 		/*-----------------------------*/
