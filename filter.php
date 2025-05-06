@@ -211,7 +211,7 @@ class filter_pod extends moodle_text_filter {
 
 		}
 
-		$endtextafteriframe = substr($text, intval($sp ["end_sub"]), ((strlen($text)-1)- intval($sp ["end_sub"])));
+		$endtextafteriframe = substr($text, intval($sp ["end_sub"]), ((strlen($text))- intval($sp ["end_sub"])));
 
 		//replace href at right place
 		foreach ($list_href as $klh => $lh) {
