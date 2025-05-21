@@ -105,8 +105,8 @@ class filter_pod extends moodle_text_filter {
 		$list_iframe = [];
 		$indice = 0;
 
-		while (strpos($text,'<iframe src="https://videos.univ-grenoble-alpes.fr/') !== false) {
-			$debutiframe = strpos($text,'<iframe src="https://videos.univ-grenoble-alpes.fr/');
+		while (strpos($text,'<iframe'/* src="https://videos.univ-grenoble-alpes.fr/'*/) !== false) {
+			$debutiframe = strpos($text,'<iframe'/* src="https://videos.univ-grenoble-alpes.fr/'*/);
 			$finiframe = strpos($text,'</iframe>')+9;
 
 			$thisiframe = substr($text, $debutiframe, $finiframe - $debutiframe);
