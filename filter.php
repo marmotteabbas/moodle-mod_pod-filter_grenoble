@@ -137,7 +137,7 @@ class filter_pod extends moodle_text_filter {
 		
 		while (strpos($text,'<a href="https://videos.univ-grenoble-alpes.fr/') !== false) {
 			$debuthref = strpos($text,'<a href="https://videos.univ-grenoble-alpes.fr/');
-			$finherf = strpos($text,'</a>')+4;
+			$finherf = strpos($text,'</a>',$debuthref)+4;
 			
 			$thishref = substr($text, $debuthref, $finherf - $debuthref);
 			$text = str_replace($thishref, "markeurhref".$indice."&&", $text);
