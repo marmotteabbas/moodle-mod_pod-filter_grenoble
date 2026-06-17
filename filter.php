@@ -135,8 +135,12 @@ class filter_pod extends moodle_text_filter {
 		$list_href = [];
 		$indice = 0;
 		
-		while (strpos($text,'<a href="https://videos.univ-grenoble-alpes.fr/') !== false) {
+		while (strpos($text,'<a href="https://videos.univ-grenoble-alpes.fr/') !== false || strpos($text,'<a target="_blank" href="https://videos.univ-grenoble-alpes.fr/') !== false) {
 			$debuthref = strpos($text,'<a href="https://videos.univ-grenoble-alpes.fr/');
+			if ($debuthref == false) {
+				 $debuthref = strpos($text,'<a target="_blank" href="https://videos.univ-grenoble-alpes.fr/');
+			}
+			
 			$finherf = strpos($text,'</a>',$debuthref)+4;
 			
 			$thishref = substr($text, $debuthref, $finherf - $debuthref);
@@ -285,7 +289,7 @@ function replace_url($matches, $config) {
 	$interactive= '';
 
 	// We retrieve the possible parameters in the video url 
-	while(list(, $m)=each($matches)) {
+/*	while(list(, $m)=each($matches)) {
 		switch($m) {
 			case "&start=":
 			case "?start=":
@@ -308,6 +312,38 @@ function replace_url($matches, $config) {
 	            }
 				break;
 		}
+	}*/
+
+	for ($i = 0; $i < count($matches); $i++) {
+    		$m = $matches[$i];
+    		$next = $matches[$i + 1] ?? null;
+
+    		switch ($m) {
+        		case '&start=':
+        		case '?start=':
+            		$start = '&start=' . $next;
+            		break;
+
+        		case '&size=':
+        		case '?size=':
+            		$size = '&size=' . $next;
+            		break;
+
+        		case '&autoplay=':
+        		case '?autoplay=':
+            		$autoplay = '&autoplay=' . $next;
+            		break;
+
+        		case '&interactive=':
+        		case '?interactive=':
+            		$interactive = '&interactive=' . $next;
+
+            		if ($next === 'true') {
+                		$width  = ' width="' . $config['width_interactive'] . '" ';
+                		$height = ' height="' . $config['height_interactive'] . '" ';
+            		}
+            		break;
+    		}
 	}
 
 	// We return the filtered url in a iframe with all the parameters
